@@ -1,4 +1,4 @@
-import adafruit_dht
+# import adafruit_dht
 from collections import namedtuple
 import time
 from .utils import get_board_pin
@@ -8,18 +8,26 @@ SensorReading = namedtuple("SensorReading", ["temperature", "humidity"])
 
 class DHT22Sensor:
     def __init__(self, env_var_name: str = "DHT22_PIN"):
+        import adafruit_dht
         pin = get_board_pin(env_var_name)
         self.dht_device = adafruit_dht.DHT22(pin)
 
     def read(self):
-        for _ in range(3):  # up to 3 tries
+        for attempt in range(3):
             try:
-                temperature_c = self.dht_device.temperature
-                humidity = self.dht_device.humidity
-                return SensorReading(temperature=temperature_c, humidity=humidity)
+                temperature = self.dht.temperature
+                humidity = self.dht.humidity
+
+                # Only return if both are non-None
+                if temperature is not None and humidity is not None:
+                    return SensorReading(temperature=temperature, humidity=humidity)
+
+                print(f"[DHT22 WARNING] Got None values on attempt {attempt + 1}")
             except RuntimeError as err:
-                print(f"[DHT22 ERROR] {err.args[0]}")
-                time.sleep(1)
+                print(f"[DHT22 ERROR] Attempt {attempt + 1}: {err}")
+            time.sleep(2)
+
+        print("[DHT22 ERROR] Failed to read after 3 attempts.")
         return SensorReading(temperature=None, humidity=None)
 
 
