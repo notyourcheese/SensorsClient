@@ -1,10 +1,3 @@
-"""
-based on the DS18B20 (ky-004) temperature sensor and code from joyit,
-The temperature evaluation: On the Raspberry Pi, detected one-Wire slaves are assigned to a separate subfolder in the folder
-/sys/bus/w1/devices/ are assigned to an own subfolder. In this folder is the file w1-slave
-in which the data sent over the one-wire bus is stored.
-"""
-
 import os
 import glob
 import time
@@ -27,7 +20,16 @@ class DS18B20Sensor:
                 raise FileNotFoundError("No DS18B20 sensor found. Check wiring and w1 modules.")
 
         self.device_file = os.path.join(self.device_folder, "w1_slave")
-        _ = self._read_raw()  # warm-up read
+
+        # Warm-up read
+        _ = self._read_raw()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # No cleanup needed for DS18B20, but it's here for consistency
+        pass
 
     def _read_raw(self):
         with open(self.device_file, "r") as f:
@@ -35,30 +37,42 @@ class DS18B20Sensor:
 
     def _parse_temperature(self):
         lines = self._read_raw()
-        while lines[0].strip()[-3:] != "YES":
+        retry_count = 5
+        while lines[0].strip()[-3:] != "YES" and retry_count > 0:
             time.sleep(0.2)
             lines = self._read_raw()
+            retry_count -= 1
 
         equals_pos = lines[1].find("t=")
         if equals_pos != -1:
             temp_string = lines[1][equals_pos + 2:]
-            return float(temp_string) / 1000.0
+            try:
+                return float(temp_string) / 1000.0
+            except ValueError:
+                print("[DS18B20 ERROR] Could not parse temperature value.")
 
         return None
 
     def read(self):
-        temp_c = self._parse_temperature()
-        return SensorReading(temperature=temp_c, humidity=None)
+        for attempt in range(3):
+            temp_c = self._parse_temperature()
+            if temp_c is not None:
+                return SensorReading(temperature=temp_c, humidity=None)
+            print(f"[DS18B20 WARNING] Attempt {attempt + 1}: Failed to get temperature")
+            time.sleep(1)
+
+        print("[DS18B20 ERROR] Failed to read temperature after 3 attempts.")
+        return SensorReading(temperature=None, humidity=None)
 
 
 if __name__ == "__main__":
     load_dotenv()
 
     sensor_id = os.getenv("DS18B20_ID")
-    sensor = DS18B20Sensor(sensor_id=sensor_id)
+    with DS18B20Sensor(sensor_id=sensor_id) as sensor:
+        reading = sensor.read()
 
-    reading = sensor.read()
-    if reading.temperature is not None:
-        print(f"DS18B20 Temp: {reading.temperature:.2f}°C")
-    else:
-        print("Failed to read from DS18B20 sensor.")
+        if reading.temperature is not None:
+            print(f"DS18B20 Temp: {reading.temperature:.2f} C")
+        else:
+            print("Failed to read from DS18B20 sensor.")
