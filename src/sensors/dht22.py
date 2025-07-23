@@ -30,6 +30,12 @@ class DHT22Sensor:
         print("[DHT22 ERROR] Failed to read after 3 attempts.")
         return SensorReading(temperature=None, humidity=None)
 
+    def __del__(self):
+        try:
+            self.dht_device.exit()
+        except Exception:
+            pass
+
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
