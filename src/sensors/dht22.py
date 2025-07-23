@@ -15,8 +15,8 @@ class DHT22Sensor:
     def read(self):
         for attempt in range(3):
             try:
-                temperature = self.dht.temperature
-                humidity = self.dht.humidity
+                temperature = self.dht_device.temperature
+                humidity = self.dht_device.humidity
 
                 # Only return if both are non-None
                 if temperature is not None and humidity is not None:
@@ -40,6 +40,6 @@ if __name__ == "__main__":
     reading = sensor.read()
 
     if reading.temperature is not None:
-        print(f"Temperature: {reading.temperature:.1f}°C, Humidity: {reading.humidity:.1f}%")
+        print(f"Temperature: {reading.temperature:.1f} C, Humidity: {reading.humidity:.1f}%")
     else:
         print("Failed to read from DHT22 sensor.")

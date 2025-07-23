@@ -22,6 +22,12 @@ class DHT11Sensor:
                 time.sleep(1)
         return SensorReading(temperature=None, humidity=None)
 
+    def __del__(self):
+        try:
+            self.dht_device.exit()
+        except Exception:
+            pass
+
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
@@ -32,6 +38,6 @@ if __name__ == "__main__":
     reading = sensor.read()
 
     if reading.temperature is not None:
-        print(f"Temperature: {reading.temperature:.1f}°C, Humidity: {reading.humidity:.1f}%")
+        print(f"Temperature: {reading.temperature:.1f} C, Humidity: {reading.humidity:.1f}%")
     else:
         print("Failed to read from DHT11 sensor.")
