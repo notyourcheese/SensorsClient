@@ -1,6 +1,6 @@
 import adafruit_dht
 from collections import namedtuple
-from utils import get_board_pin
+from .utils import get_board_pin
 
 SensorReading = namedtuple("SensorReading", ["temperature", "humidity"])
 
