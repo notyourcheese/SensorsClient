@@ -3,14 +3,6 @@ from dotenv import load_dotenv
 import os
 import board
 
-# def resolve_pin(var_name):
-#     pin_name = os.getenv(var_name)
-#     if not pin_name:
-#         raise EnvironmentError(f"{var_name} not set in .env")
-#     try:
-#         return getattr(board, pin_name)
-#     except AttributeError:
-#         raise ValueError(f"Invalid pin name '{pin_name}' for {var_name}")
 
 def main():
     load_dotenv()
@@ -29,8 +21,7 @@ def main():
             with cls(f"{sensor_type}_PIN") as sensor:
                 reading = sensor.read()
         elif sensor_type == "DS18B20":
-            sensor_id = os.getenv("DS18B20_ID")
-            with cls(sensor_id) as sensor:
+            with cls() as sensor:
                 reading = sensor.read()
         else:
             raise ValueError(f"Unsupported SENSOR_TYPE '{sensor_type}'")

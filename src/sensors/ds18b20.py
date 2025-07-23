@@ -8,16 +8,12 @@ SensorReading = namedtuple("SensorReading", ["temperature", "humidity"])
 
 
 class DS18B20Sensor:
-    def __init__(self, sensor_id: str = None):
+    def __init__(self):
         self.base_dir = "/sys/bus/w1/devices/"
-
-        if sensor_id:
-            self.device_folder = os.path.join(self.base_dir, sensor_id)
-        else:
-            try:
-                self.device_folder = glob.glob(self.base_dir + "28*")[0]
-            except IndexError:
-                raise FileNotFoundError("No DS18B20 sensor found. Check wiring and w1 modules.")
+        try:
+            self.device_folder = glob.glob(self.base_dir + "28*")[0]
+        except IndexError:
+            raise FileNotFoundError("No DS18B20 sensor found. Check wiring and w1 modules.")
 
         self.device_file = os.path.join(self.device_folder, "w1_slave")
 
@@ -69,7 +65,7 @@ if __name__ == "__main__":
     load_dotenv()
 
     sensor_id = os.getenv("DS18B20_ID")
-    with DS18B20Sensor(sensor_id=sensor_id) as sensor:
+    with DS18B20Sensor() as sensor:
         reading = sensor.read()
 
         if reading.temperature is not None:
