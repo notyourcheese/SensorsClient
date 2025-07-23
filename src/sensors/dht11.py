@@ -1,3 +1,8 @@
+"""
+fair warning: not tested, as I don't run the dht11 sensor anymore. carbon copy of dht22.py with 22 -> 11
+should work just fine.
+"""
+
 from collections import namedtuple
 import time
 from .utils import get_board_pin

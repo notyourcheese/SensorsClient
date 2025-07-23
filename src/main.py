@@ -3,14 +3,14 @@ from dotenv import load_dotenv
 import os
 import board
 
-def resolve_pin(var_name):
-    pin_name = os.getenv(var_name)
-    if not pin_name:
-        raise EnvironmentError(f"{var_name} not set in .env")
-    try:
-        return getattr(board, pin_name)
-    except AttributeError:
-        raise ValueError(f"Invalid pin name '{pin_name}' for {var_name}")
+# def resolve_pin(var_name):
+#     pin_name = os.getenv(var_name)
+#     if not pin_name:
+#         raise EnvironmentError(f"{var_name} not set in .env")
+#     try:
+#         return getattr(board, pin_name)
+#     except AttributeError:
+#         raise ValueError(f"Invalid pin name '{pin_name}' for {var_name}")
 
 def main():
     load_dotenv()
@@ -26,8 +26,7 @@ def main():
         print(f"Reading from {sensor_type}...")
 
         if sensor_type in ("DHT11", "DHT22"):
-            pin = resolve_pin(f"{sensor_type}_PIN")
-            with cls(pin) as sensor:
+            with cls(f"{sensor_type}_PIN") as sensor:
                 reading = sensor.read()
         elif sensor_type == "DS18B20":
             sensor_id = os.getenv("DS18B20_ID")
