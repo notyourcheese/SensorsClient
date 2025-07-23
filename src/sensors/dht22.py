@@ -1,4 +1,3 @@
-# import adafruit_dht
 from collections import namedtuple
 import time
 from .utils import get_board_pin
@@ -12,13 +11,21 @@ class DHT22Sensor:
         pin = get_board_pin(env_var_name)
         self.dht_device = adafruit_dht.DHT22(pin)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            self.dht_device.exit()
+        except Exception:
+            pass
+
     def read(self):
         for attempt in range(3):
             try:
                 temperature = self.dht_device.temperature
                 humidity = self.dht_device.humidity
 
-                # Only return if both are non-None
                 if temperature is not None and humidity is not None:
                     return SensorReading(temperature=temperature, humidity=humidity)
 
@@ -30,25 +37,16 @@ class DHT22Sensor:
         print("[DHT22 ERROR] Failed to read after 3 attempts.")
         return SensorReading(temperature=None, humidity=None)
 
-    def __del__(self):
-        try:
-            self.dht_device.exit()
-        except Exception:
-            pass
-
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv()
 
-    sensor = DHT22Sensor()  # Uses default "DHT22_PIN"
-    reading = sensor.read()
+    with DHT22Sensor() as sensor:
+        reading = sensor.read()
 
-    if reading.temperature is not None:
-        print(f"Temperature: {reading.temperature:.1f} C, Humidity: {reading.humidity:.1f}%")
-    else:
-        print("Failed to read from DHT22 sensor.")
-
-    # Ensure the sensor is properly cleaned up on exit
-    sensor.dht_device.exit()
+        if reading.temperature is not None:
+            print(f"Temperature: {reading.temperature:.1f} C, Humidity: {reading.humidity:.1f}%")
+        else:
+            print("Failed to read from DHT22 sensor.")
