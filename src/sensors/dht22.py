@@ -49,3 +49,6 @@ if __name__ == "__main__":
         print(f"Temperature: {reading.temperature:.1f} C, Humidity: {reading.humidity:.1f}%")
     else:
         print("Failed to read from DHT22 sensor.")
+
+    # Ensure the sensor is properly cleaned up on exit
+    sensor.dht_device.exit()
