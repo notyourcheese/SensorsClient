@@ -1,6 +1,7 @@
 import adafruit_dht
 from collections import namedtuple
 from .utils import get_board_pin
+import time
 
 SensorReading = namedtuple("SensorReading", ["temperature", "humidity"])
 
@@ -11,13 +12,15 @@ class DHT11Sensor:
         self.dht_device = adafruit_dht.DHT11(pin)
 
     def read(self):
-        try:
-            temperature_c = self.dht_device.temperature
-            humidity = self.dht_device.humidity
-            return SensorReading(temperature=temperature_c, humidity=humidity)
-        except RuntimeError as err:
-            print(f"[DHT11 ERROR] {err.args[0]}")
-            return SensorReading(temperature=None, humidity=None)
+        for _ in range(3):  # up to 3 tries
+            try:
+                temperature_c = self.dht_device.temperature
+                humidity = self.dht_device.humidity
+                return SensorReading(temperature=temperature_c, humidity=humidity)
+            except RuntimeError as err:
+                print(f"[DHT22 ERROR] {err.args[0]}")
+                time.sleep(1)
+        return SensorReading(temperature=None, humidity=None)
 
 
 if __name__ == "__main__":
