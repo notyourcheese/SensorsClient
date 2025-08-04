@@ -4,6 +4,7 @@ import requests
 from dotenv import load_dotenv
 from sensors import sensor_class_map
 
+load_dotenv()
 API_URL = os.getenv("API_URL", "http://10.10.10.6:8811")  # or localhost if running locally
 
 def load_sensors():
@@ -73,7 +74,7 @@ def post_readings(device_name, sensors):
         print(f"[!] Failed to send readings: {e}")
 
 def main():
-    load_dotenv()
+
 
     device_name = os.getenv("DEVICE_NAME")
     location = os.getenv("DEVICE_LOCATION")
