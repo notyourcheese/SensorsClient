@@ -82,6 +82,7 @@ def post_readings(device_name, sensors):
         "Content-Type": "application/json"
     }
     readings = []
+    hostname, ip_address = get_device_identity()
 
     for sensor_type, sensor in sensors:
         reading = sensor.read()
@@ -90,12 +91,10 @@ def post_readings(device_name, sensors):
                 "sensor_unique_id": f"{device_name.lower()}-{sensor_type.lower()}",
                 "temperature": reading.temperature,
                 "humidity": reading.humidity,
-                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "hostname": hostname,
+                "ip_address": ip_address
             })
-
-    hostname, ip_address = get_device_identity()
-    readings.append({"hostname": hostname,
-                     "ip_address": ip_address})
 
     if not readings:
         print("[!] No valid readings to send.")
