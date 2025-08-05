@@ -5,7 +5,9 @@ from dotenv import load_dotenv
 from sensors import sensor_class_map
 
 load_dotenv()
-API_URL = os.getenv("API_URL", "http://10.10.10.6:8811")  # or localhost if running locally
+API_URL = os.getenv("API_URL", "http://10.10.10.6:8811")
+API_TOKEN = os.getenv("API_TOKEN")
+
 
 def load_sensors():
     sensor_types = os.getenv("SENSOR_TYPES", "DHT22").upper().split(",")
@@ -27,7 +29,13 @@ def load_sensors():
         sensors.append((sensor_type, sensor))
     return sensors
 
+
 def register_device(device_name, location, sensors):
+    headers = {
+        "Authorization": f"Bearer {API_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
     payload = {
         "device_name": device_name,
         "location": location,
@@ -43,13 +51,20 @@ def register_device(device_name, location, sensors):
         })
 
     try:
-        r = requests.post(f"{API_URL}/sensors/register", json=payload)
+        r = requests.post(f"{API_URL}/sensors/register", json=payload, headers=headers, timeout=10)
         r.raise_for_status()
         print("[✓] Registration successful.")
+    except requests.HTTPError as e:
+        print(f"[!] HTTP error: {e.response.status_code} - {e.response.text}")
     except Exception as e:
         print(f"[!] Registration failed: {e}")
 
+
 def post_readings(device_name, sensors):
+    headers = {
+        "Authorization": f"Bearer {API_TOKEN}",
+        "Content-Type": "application/json"
+    }
     readings = []
 
     for sensor_type, sensor in sensors:
@@ -67,15 +82,16 @@ def post_readings(device_name, sensors):
         return
 
     try:
-        r = requests.post(f"{API_URL}/readings/", json={"readings": readings})
+        r = requests.post(f"{API_URL}/readings/", json={"readings": readings}, headers=headers, timeout=10)
         r.raise_for_status()
         print(f"[✓] Sent {len(readings)} reading(s).")
+    except requests.HTTPError as e:
+        print(f"[!] HTTP error: {e.response.status_code} - {e.response.text}")
     except Exception as e:
         print(f"[!] Failed to send readings: {e}")
 
+
 def main():
-
-
     device_name = os.getenv("DEVICE_NAME")
     location = os.getenv("DEVICE_LOCATION")
 
@@ -85,6 +101,7 @@ def main():
     sensors = load_sensors()
     register_device(device_name, location, sensors)
     post_readings(device_name, sensors)
+
 
 if __name__ == "__main__":
     main()
