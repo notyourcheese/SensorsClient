@@ -1,4 +1,5 @@
 import os
+import socket
 import time
 import requests
 from dotenv import load_dotenv
@@ -7,6 +8,21 @@ from sensors import sensor_class_map
 load_dotenv()
 API_URL = os.getenv("API_URL", "http://10.10.10.6:8811")
 API_TOKEN = os.getenv("API_TOKEN")
+
+
+def get_device_identity():
+    hostname = socket.gethostname()
+
+    try:
+        # Get primary IP address (used for outbound connections)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))  # Doesn't actually send data
+        ip_address = s.getsockname()[0]
+        s.close()
+    except Exception:
+        ip_address = "unknown"
+
+    return hostname, ip_address
 
 
 def load_sensors():
@@ -76,6 +92,10 @@ def post_readings(device_name, sensors):
                 "humidity": reading.humidity,
                 "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             })
+
+    hostname, ip_address = get_device_identity()
+    readings.append({"hostname": hostname,
+                     "ip_address": ip_address})
 
     if not readings:
         print("[!] No valid readings to send.")
